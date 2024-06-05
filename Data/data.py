@@ -94,6 +94,8 @@ class IMDB_data:
             The processed validation dataset.
         - test_data: torch.utils.data.Dataset
             The processed test dataset.
+        - vocab: torchtext.vocab.Vocab
+            The produced vocab.
         """
         # Tokenize the data
         train_data = self.train_data.map(self._clean_and_tokenize_input)
@@ -117,7 +119,7 @@ class IMDB_data:
         valid_data = valid_data.with_format(type="torch", columns=["ids", "label", "length"])
         test_data = test_data.with_format(type="torch", columns=["ids", "label", "length"])
 
-        return train_data, valid_data, test_data
+        return train_data, valid_data, test_data, vocab
     
     def visualize(self):
         """
