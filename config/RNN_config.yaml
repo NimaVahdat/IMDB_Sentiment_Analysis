@@ -1,0 +1,25 @@
+# Configuration file for IMDB Sentiment Analysis
+
+# Model configuration
+model_config:
+  embedding_dim: 300               # Dimension of the word embeddings
+  hidden_dim: 300                  # Dimension of the hidden state
+  output_dim: 2                    # Number of output classes (e.g., positive/negative)
+  n_layers: 2                      # Number of recurrent layers
+  bidirectional: True              # Use bidirectional RNN
+  dropout_rate: 0.5                # Dropout rate
+
+# Data configuration
+data_config:
+  test_size: 0.25                  # Proportion of the dataset for the test split
+  max_length: 256                  # Maximum length of the reviews
+  min_freq: 5                      # Minimum frequency to include a token in the vocabulary
+
+# Training configuration
+batch_size: 512                    # Batch size for training
+lr: 5e-4                           # Learning rate
+num_epochs: 10                     # Number of training epochs
+initialize_weights: True           # Flag to initialize weights
+
+# Model to use (RNN, LSTM, GRU)
+model: RNN

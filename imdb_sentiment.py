@@ -8,6 +8,7 @@ import re
 import pandas as pd
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud
+from torch.utils.tensorboard import SummaryWriter
 
 from Data import IMDB_data, get_data_loader
 from Networks.networks import RNN, LSTM, GRU
@@ -22,19 +23,27 @@ class IMDBSentimentAnalyzer:
         - config (dict): Configuration dictionary containing model, data, and training parameters.
         """
         self.config = config
-        self._setup_model()
         self._setup_data()
+        self._setup_model()
         self._initialize_weights()
         self._setup_pretrained_embeddings()
         self._setup_training_tools()
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model = self.model.to(self.device)
         self.criterion = self.criterion.to(self.device)
+        self.writer = SummaryWriter()
 
     def _setup_model(self):
         """Set up the model based on the configuration."""
         model_name = self.config["model"]
         model_config = self.config["model_config"]
+
+        # Add common parameters to the model configuration
+        model_config.update(
+            {"vocab_size": len(self.vocab), "pad_index": self.pad_index}
+        )
+
+        # Initialize the model based on the specified name
         if model_name == "RNN":
             self.model = RNN(**model_config)
         elif model_name == "LSTM":
@@ -50,12 +59,12 @@ class IMDBSentimentAnalyzer:
         batch_size = self.config["batch_size"]
         data = IMDB_data(**data_config)
         self.train_data, self.valid_data, self.test_data, self.vocab = data.get_data()
-        pad_index = data.pad_index
+        self.pad_index = data.pad_index
         self.train_loader = get_data_loader(
-            self.train_data, batch_size, pad_index, shuffle=True
+            self.train_data, batch_size, self.pad_index, shuffle=True
         )
-        self.valid_loader = get_data_loader(self.valid_data, batch_size, pad_index)
-        self.test_loader = get_data_loader(self.test_data, batch_size, pad_index)
+        self.valid_loader = get_data_loader(self.valid_data, batch_size, self.pad_index)
+        self.test_loader = get_data_loader(self.test_data, batch_size, self.pad_index)
 
     def _initialize_weights(self):
         """Initialize model weights if specified in the configuration."""
@@ -138,9 +147,17 @@ class IMDBSentimentAnalyzer:
             metrics["train_accs"].append(train_acc)
             metrics["valid_losses"].append(valid_loss)
             metrics["valid_accs"].append(valid_acc)
+
+            # Log metrics to TensorBoard
+            self.writer.add_scalar("Loss/Train", train_loss, epoch)
+            self.writer.add_scalar("Accuracy/Train", train_acc, epoch)
+            self.writer.add_scalar("Loss/Valid", valid_loss, epoch)
+            self.writer.add_scalar("Accuracy/Valid", valid_acc, epoch)
+
             if valid_loss < best_valid_loss:
                 best_valid_loss = valid_loss
                 torch.save(self.model.state_dict(), f"{model_name}.pt")
+
             print(f"Epoch: {epoch + 1}")
             print(f"Train Loss: {train_loss:.3f}, Train Acc: {train_acc:.3f}")
             print(f"Valid Loss: {valid_loss:.3f}, Valid Acc: {valid_acc:.3f}")
