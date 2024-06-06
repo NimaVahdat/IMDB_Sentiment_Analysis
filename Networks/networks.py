@@ -4,6 +4,7 @@ import torch
 import torch.nn as nn
 import torch
 
+
 class RNN(nn.Module):
     def __init__(
         self,
@@ -55,7 +56,7 @@ class RNN(nn.Module):
         """
         # Embed input sequences
         embedded = self.dropout(self.embedding(ids))
-        
+
         # Pack padded sequences
         packed_embedded = nn.utils.rnn.pack_padded_sequence(
             embedded, length, batch_first=True, enforce_sorted=False
@@ -156,6 +157,7 @@ class LSTM(nn.Module):
 
 import torch.nn as nn
 import torch
+
 
 class GRU(nn.Module):
     def __init__(

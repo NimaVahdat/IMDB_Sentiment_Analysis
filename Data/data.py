@@ -6,8 +6,11 @@ import matplotlib.pyplot as plt
 from wordcloud import WordCloud
 import re
 
+
 class IMDB_data:
-    def __init__(self, test_size: float = 0.25, max_length: int = 256, min_freq: int = 5):
+    def __init__(
+        self, test_size: float = 0.25, max_length: int = 256, min_freq: int = 5
+    ):
         """
         IMDB_data class for loading and preprocessing the IMDB dataset.
 
@@ -25,9 +28,11 @@ class IMDB_data:
         self.min_freq = min_freq
 
         # Load the IMDB dataset
-        self.train_data, self.test_data = datasets.load_dataset('imdb', split=['train', 'test'])
+        self.train_data, self.test_data = datasets.load_dataset(
+            "imdb", split=["train", "test"]
+        )
         # Use the basic English tokenizer from torchtext
-        self.tokenizer = torchtext.data.utils.get_tokenizer('basic_english')
+        self.tokenizer = torchtext.data.utils.get_tokenizer("basic_english")
 
     def _clean_text(self, text):
         """
@@ -41,24 +46,24 @@ class IMDB_data:
         # Convert to lowercase
         text = text.lower()
         # Remove HTML tags
-        text = re.sub(r'<.*?>', '', text)
+        text = re.sub(r"<.*?>", "", text)
         # Remove URLs
-        text = re.sub(r'http\S+|www\S+|https\S+', '', text)
+        text = re.sub(r"http\S+|www\S+|https\S+", "", text)
         # Remove special characters, punctuation, and numbers
-        text = re.sub(r'[^a-z\s]', '', text)
+        text = re.sub(r"[^a-z\s]", "", text)
         # Remove extra whitespace
-        text = re.sub(r'\s+', ' ', text).strip()
+        text = re.sub(r"\s+", " ", text).strip()
         return text
 
     def _clean_and_tokenize_input(self, x):
         """
         Cleans and tokenizes the input text.
         """
-        cleaned_text = self._clean_text(x['text'])
-        tokens = self.tokenizer(cleaned_text)[:self.max_length]
+        cleaned_text = self._clean_text(x["text"])
+        tokens = self.tokenizer(cleaned_text)[: self.max_length]
         length = len(tokens)
-        return {'tokens': tokens, 'length': length}
-    
+        return {"tokens": tokens, "length": length}
+
     def _get_vocab(self, train_data):
         """
         Builds a vocabulary from the training data.
@@ -75,7 +80,7 @@ class IMDB_data:
 
         vocab.set_default_index(self.unk_index)
         return vocab
-    
+
     def _numericalize_input(self, x, vocab):
         """
         Converts tokens to their respective indices using the vocabulary.
@@ -86,7 +91,7 @@ class IMDB_data:
     def get_data(self):
         """
         Processes the dataset by tokenizing, building the vocabulary, and numericalizing the tokens.
-        
+
         Returns:
         - train_data: torch.utils.data.Dataset
             The processed training dataset.
@@ -110,41 +115,23 @@ class IMDB_data:
         vocab = self._get_vocab(train_data=train_data)
 
         # Numericalize the tokenized text
-        train_data = train_data.map(self._numericalize_input, fn_kwargs={"vocab": vocab})
-        valid_data = valid_data.map(self._numericalize_input, fn_kwargs={"vocab": vocab})
+        train_data = train_data.map(
+            self._numericalize_input, fn_kwargs={"vocab": vocab}
+        )
+        valid_data = valid_data.map(
+            self._numericalize_input, fn_kwargs={"vocab": vocab}
+        )
         test_data = test_data.map(self._numericalize_input, fn_kwargs={"vocab": vocab})
 
         # Convert datasets to torch format with specified columns
-        train_data = train_data.with_format(type="torch", columns=["ids", "label", "length"])
-        valid_data = valid_data.with_format(type="torch", columns=["ids", "label", "length"])
-        test_data = test_data.with_format(type="torch", columns=["ids", "label", "length"])
+        train_data = train_data.with_format(
+            type="torch", columns=["ids", "label", "length"]
+        )
+        valid_data = valid_data.with_format(
+            type="torch", columns=["ids", "label", "length"]
+        )
+        test_data = test_data.with_format(
+            type="torch", columns=["ids", "label", "length"]
+        )
 
         return train_data, valid_data, test_data, vocab
-    
-    def visualize(self):
-        """
-        Visualizes word clouds for positive and negative reviews in the training data.
-        """
-
-        # Create a DataFrame from the training data
-        data = {
-            'text': self.train_data['text'],
-            'label': self.train_data['label']
-        }
-        df = pd.DataFrame(data)
-
-        # Clean the text
-        df['text'] = df['text'].apply(self._clean_text)
-
-        # Generate word clouds for positive and negative reviews
-        for sentiment in [0, 1]:
-            sentiment_text = df.loc[df['label'] == sentiment, 'text']
-            text = ' '.join(sentiment_text.astype(str))
-            title = 'Wordcloud for Negative Reviews' if sentiment == 0 else 'Wordcloud for Positive Reviews'
-            wordcloud = WordCloud(width=800, height=400, background_color='white').generate(text)
-
-            plt.figure(figsize=(10, 5))
-            plt.title(title)
-            plt.imshow(wordcloud, interpolation='bilinear')
-            plt.axis('off')
-            plt.show()
