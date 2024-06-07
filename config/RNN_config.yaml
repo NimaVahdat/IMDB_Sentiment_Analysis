@@ -17,7 +17,7 @@ data_config:
 
 # Training configuration
 batch_size: 512                    # Batch size for training
-lr: 5e-4                           # Learning rate
+lr: 0.0005                           # Learning rate
 num_epochs: 10                     # Number of training epochs
 initialize_weights: True           # Flag to initialize weights
 
