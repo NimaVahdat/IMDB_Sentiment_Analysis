@@ -1,10 +1,11 @@
+import re
+
+import datasets
+import matplotlib.pyplot as plt
+import pandas as pd
 import torch
 import torchtext
-import datasets
-import pandas as pd
-import matplotlib.pyplot as plt
 from wordcloud import WordCloud
-import re
 
 
 class IMDB_data:
@@ -134,4 +135,4 @@ class IMDB_data:
             type="torch", columns=["ids", "label", "length"]
         )
 
-        return train_data, valid_data, test_data, vocab
+        return train_data, valid_data, test_data, vocab, self.tokenizer

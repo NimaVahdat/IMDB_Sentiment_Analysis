@@ -1,17 +1,18 @@
+import collections
+import re
+
+import matplotlib.pyplot as plt
+import pandas as pd
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchtext
 import tqdm
-import collections
-import re
-import pandas as pd
-import matplotlib.pyplot as plt
-from wordcloud import WordCloud
 from torch.utils.tensorboard import SummaryWriter
+from wordcloud import WordCloud
 
 from Data import IMDB_data, get_data_loader
-from Networks.networks import RNN, LSTM, GRU
+from Networks.networks import GRU, LSTM, RNN
 
 
 class IMDBSentimentAnalyzer:
@@ -58,7 +59,9 @@ class IMDBSentimentAnalyzer:
         data_config = self.config["data_config"]
         batch_size = self.config["batch_size"]
         data = IMDB_data(**data_config)
-        self.train_data, self.valid_data, self.test_data, self.vocab = data.get_data()
+        self.train_data, self.valid_data, self.test_data, self.vocab, self.tokenizer = (
+            data.get_data()
+        )
         self.pad_index = data.pad_index
         self.train_loader = get_data_loader(
             self.train_data, batch_size, self.pad_index, shuffle=True
@@ -94,12 +97,12 @@ class IMDBSentimentAnalyzer:
                 elif "weight" in name:
                     nn.init.orthogonal_(param)
 
-    def train_epoch(self, dataloader):
+    def train_epoch(self, dataloader, epoch):
         """Train the model for one epoch."""
         self.model.train()
         epoch_losses = []
         epoch_accs = []
-        for batch in tqdm.tqdm(dataloader, desc="Training..."):
+        for batch in tqdm.tqdm(dataloader, desc=f"Training epoch {epoch+1}"):
             ids = batch["ids"].to(self.device)
             lengths = batch["length"]
             labels = batch["label"].to(self.device)
@@ -110,7 +113,7 @@ class IMDBSentimentAnalyzer:
             loss.backward()
             self.optimizer.step()
             epoch_losses.append(loss.item())
-            epoch_accs.append(accuracy.item())
+            epoch_accs.append(accuracy)
         return torch.mean(torch.tensor(epoch_losses)), torch.mean(
             torch.tensor(epoch_accs)
         )
@@ -121,7 +124,7 @@ class IMDBSentimentAnalyzer:
         epoch_losses = []
         epoch_accs = []
         with torch.no_grad():
-            for batch in tqdm.tqdm(dataloader, desc="Evaluating..."):
+            for batch in tqdm.tqdm(dataloader, desc=f"Evaluating"):
                 ids = batch["ids"].to(self.device)
                 lengths = batch["length"]
                 labels = batch["label"].to(self.device)
@@ -129,7 +132,7 @@ class IMDBSentimentAnalyzer:
                 loss = self.criterion(predictions, labels)
                 accuracy = self._get_accuracy(predictions, labels)
                 epoch_losses.append(loss.item())
-                epoch_accs.append(accuracy.item())
+                epoch_accs.append(accuracy)
         return torch.mean(torch.tensor(epoch_losses)), torch.mean(
             torch.tensor(epoch_accs)
         )
@@ -141,7 +144,7 @@ class IMDBSentimentAnalyzer:
         metrics = collections.defaultdict(list)
         model_name = self.config["model"]
         for epoch in range(num_epochs):
-            train_loss, train_acc = self.train_epoch(self.train_loader)
+            train_loss, train_acc = self.train_epoch(self.train_loader, epoch)
             valid_loss, valid_acc = self.evaluate_epoch(self.valid_loader)
             metrics["train_losses"].append(train_loss)
             metrics["train_accs"].append(train_acc)
@@ -161,6 +164,63 @@ class IMDBSentimentAnalyzer:
             print(f"Epoch: {epoch + 1}")
             print(f"Train Loss: {train_loss:.3f}, Train Acc: {train_acc:.3f}")
             print(f"Valid Loss: {valid_loss:.3f}, Valid Acc: {valid_acc:.3f}")
+
+    def test_model(self):
+        """Test the trained model on the test dataset"""
+        model_name = self.config["model"]
+
+        try:
+            # Load the trained model state
+            self.model.load_state_dict(torch.load(f"{model_name}.pt"))
+            self.model.to(self.device)
+            self.model.eval()
+
+            # Evaluate the model on the test dataset
+            test_loss, test_acc = self.evaluate_epoch(self.test_loader)
+
+            # Print the results
+            print(f"Test Loss: {test_loss:.3f}, Test Acc: {test_acc:.3f}")
+
+        except FileNotFoundError:
+            print(f"Error: Model file '{model_name}.pt' not found.")
+        except Exception as e:
+            print(f"An error occurred while testing the model: {e}")
+
+    def predict_sentiment(self, text):
+        """Predict the sentiment of a given text using the trained model"""
+        model_name = self.config["model"]
+
+        try:
+            # Load the trained model state
+            self.model.load_state_dict(torch.load(f"{model_name}.pt"))
+            self.model.to(self.device)
+            self.model.eval()
+
+            # Tokenize and preprocess the input text
+            tokens = self.tokenizer(text)
+            token_ids = self.vocab.lookup_indices(tokens)
+            token_length = torch.LongTensor([len(token_ids)])
+
+            # Prepare the input tensor
+            input_tensor = torch.LongTensor(token_ids).unsqueeze(dim=0).to(self.device)
+
+            # Get the model's prediction
+            prediction = self.model(input_tensor, token_length).squeeze(dim=0)
+            probability = torch.softmax(prediction, dim=-1)
+
+            # Get the predicted class and its probability
+            predicted_class_idx = prediction.argmax(dim=-1).item()
+            predicted_probability = probability[predicted_class_idx].item()
+
+            predicted_class = "Negative" if predicted_class_idx == 0 else "Positive"
+            print(
+                f"{model_name}:\n\tPredicted class: {predicted_class}\n\tProbability: {predicted_probability:.3f}"
+            )
+
+        except FileNotFoundError:
+            print(f"Error: Model file '{model_name}.pt' not found.")
+        except Exception as e:
+            print(f"An error occurred while predicting sentiment: {e}")
 
     @staticmethod
     def _get_accuracy(predictions, labels):

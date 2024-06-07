@@ -1,8 +1,5 @@
-import torch.nn as nn
 import torch
-
 import torch.nn as nn
-import torch
 
 
 class RNN(nn.Module):
@@ -153,10 +150,6 @@ class LSTM(nn.Module):
         prediction = self.fc(hidden)
 
         return prediction
-
-
-import torch.nn as nn
-import torch
 
 
 class GRU(nn.Module):
