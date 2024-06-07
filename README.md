@@ -6,6 +6,8 @@ This repository contains the implementation of a sentiment analysis model using 
 - [Introduction](#introduction)
 - [Features](#features)
 - [Installation](#installation)
+- [Usage](#usage)
+  -- [Configuration](#configuration)
 - [Results](#results)
 - [Contributing](#contributing)
 - [License](#license)
@@ -37,6 +39,10 @@ Ensure you have the following packages installed:
 * wordcloud
 * tqdm
 * tensorboard
+
+## Usage
+
+### Configuration
 
 ## Results
 The results of the model training and evaluation, including accuracy and loss metrics, can be visualized using TensorBoard. Additionally, word clouds offer a visual representation of common terms in positive and negative reviews.
