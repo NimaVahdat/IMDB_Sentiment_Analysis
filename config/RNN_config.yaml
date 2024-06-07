@@ -7,7 +7,7 @@ model_config:
   output_dim: 2                    # Number of output classes (e.g., positive/negative)
   n_layers: 2                      # Number of recurrent layers
   bidirectional: True              # Use bidirectional RNN
-  dropout_rate: 0.5                # Dropout rate
+  dropout_rate: 0.1                # Dropout rate
 
 # Data configuration
 data_config:
@@ -17,9 +17,9 @@ data_config:
 
 # Training configuration
 batch_size: 512                    # Batch size for training
-lr: 0.0005                           # Learning rate
-num_epochs: 10                     # Number of training epochs
+lr: 0.0005                         # Learning rate
+num_epochs: 7                      # Number of training epochs
 initialize_weights: True           # Flag to initialize weights
 
 # Model to use (RNN, LSTM, GRU)
-model: RNN
+model: RNN 
