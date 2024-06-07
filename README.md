@@ -72,7 +72,7 @@ The visualize method in the script generates word clouds for positive and negati
 # Visualize word clouds
 imdb_rnn.visualize()
 ```
-![Positive Reviews Word Cloud](visual/positive_word_cloud.png) ![Negative Reviews Word Cloud](visual/negative_word_cloud.png)
+<img src="visual/positive_word_cloud.png" alt="Positive Reviews Word Cloud" width="45%"/> <img src="visual/negative_word_cloud.png" alt="Negative Reviews Word Cloud" width="45%"/>
 
 This helps in understanding the most common words in positive and negative reviews.
 
