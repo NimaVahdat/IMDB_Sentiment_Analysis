@@ -29,7 +29,7 @@ The goal of this project is to build and compare different neural network models
 To set up the project, clone the repository and install the required packages:
 
 ```bash
-git clone https://github.com/yourusername/imdb-sentiment-analysis.git
+git clone https://github.com/NimaVahdat/IMDB_Sentiment_Analysis.git
 cd imdb-sentiment-analysis
 ```
 
