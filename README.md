@@ -72,7 +72,12 @@ The visualize method in the script generates word clouds for positive and negati
 # Visualize word clouds
 imdb_rnn.visualize()
 ```
-<img src="https://github.com/NimaVahdat/IMDB_Sentiment_Analysis/blob/main/visual/positive_word_cloud.png" alt="Positive Reviews Word Cloud" width="45%"/> <img src="https://github.com/NimaVahdat/IMDB_Sentiment_Analysis/blob/main/visual/negative_word_cloud.png" width="45%"/>
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/NimaVahdat/IMDB_Sentiment_Analysis/main/visual/positive_word_cloud.png" width="45%"/>
+  <img src="https://raw.githubusercontent.com/NimaVahdat/IMDB_Sentiment_Analysis/main/visual/negative_word_cloud.png" width="45%"/>
+</div>
+
 
 This helps in understanding the most common words in positive and negative reviews.
 
